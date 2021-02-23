@@ -1,0 +1,24 @@
+{
+  "name": "syncboardbackend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/main.js",
+  "scripts": {
+    "start": "tsc && node ./dist/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ypsilondev/SyncBoardBackend.git"
+  },
+  "author": "yJulian, yNiklas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ypsilondev/SyncBoardBackend/issues"
+  },
+  "homepage": "https://github.com/ypsilondev/SyncBoardBackend#readme",
+  "dependencies": {
+    "@types/socket.io": "^2.1.13",
+    "socket.io": "^3.1.1",
+    "typescript": "^4.1.5"
+  }
+}
