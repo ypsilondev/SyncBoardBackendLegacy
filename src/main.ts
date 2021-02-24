@@ -15,7 +15,7 @@ export class Main {
         this.server = new Server(this.PORT);
 
         this.server.on("connection", (socket) => {
-            console.log(`Client connected [id=${socket.id}, ip=${socket.ip}]`)
+            console.log(`Client connected [id=${socket.id}, ip=${socket.handshake.address}]`)
             this.clients.push(socket);
 
             socket.on(this.DATA_CHANNEL, ( msg: string ) => {
