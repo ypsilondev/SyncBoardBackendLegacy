@@ -15,11 +15,10 @@ export class Main {
         this.server = new Server(this.PORT);
 
         this.server.on("connection", (socket) => {
-            console.log(`Client connected [id=${socket.id}]`)
+            console.log(`Client connected [id=${socket.id}, ip=${socket.ip}]`)
             this.clients.push(socket);
 
             socket.on(this.DATA_CHANNEL, ( msg: string ) => {
-                console.log(`Received message [id=${socket.id}, message=${msg}]`);
                 this.broadcast(this.DATA_CHANNEL, msg, socket);
             })
 
