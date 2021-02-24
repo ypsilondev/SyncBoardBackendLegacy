@@ -1,4 +1,5 @@
 import { Server, Socket } from "socket.io";
+import { Client } from "socket.io/dist/client";
 
 export class Main {
     
@@ -14,25 +15,27 @@ export class Main {
         this.server = new Server(this.PORT);
 
         this.server.on("connection", (socket) => {
-            console.info(`Client connected [id=${socket.id}]`)
+            console.log(`Client connected [id=${socket.id}]`)
             this.clients.push(socket);
 
             socket.on(this.DATA_CHANNEL, ( msg: string ) => {
-                console.info(`Received message [id=${socket.id}, message=${msg}]`);
-                this.broadcast(this.DATA_CHANNEL, msg);
+                console.log(`Received message [id=${socket.id}, message=${msg}]`);
+                this.broadcast(this.DATA_CHANNEL, msg, socket);
             })
 
             // Disconnect event to remove the client
             socket.on("disconnect", () => {
                 self.clients.splice(this.clients.indexOf(socket), 1);
-                console.info(`Client disconnected [id=${socket.id}]`)
+                console.log(`Client disconnected [id=${socket.id}]`)
             });
         });
     }
 
-    broadcast(channel: string, message: string) {
+    broadcast(channel: string, message: string, blacklist: Socket) {
         this.clients.forEach( ( client ) => {
-            client.emit(channel, message);
+            if (client != blacklist) {
+                client.emit(channel, message);
+            }
         })
     }
 
