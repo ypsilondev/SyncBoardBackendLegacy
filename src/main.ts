@@ -35,7 +35,7 @@ export class Main {
                     }
                     case "create": {
                         const token = this.createRoom(client);
-                        const data = JSON.stringify({'token': token});
+                        const data = JSON.stringify({token: token});
                         client.emit(this.COMMAND_CHANNEL, data);
                     }
                 }
