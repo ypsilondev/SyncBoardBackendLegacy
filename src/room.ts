@@ -1,13 +1,14 @@
 import { Socket } from "socket.io";
+import { Client } from "./client";
+import { Main } from "./main";
 import { Utility } from "./util";
 
 export class Room {
 
-    readonly DATA_CHANNEL = "sync";
     private readonly token: string;
-    private clients: Socket[] = [];
+    private clients: Client[] = [];
 
-    constructor(socket: Socket) { 
+    constructor(socket: Client) { 
         this.token = Utility.getRandomString(4);
         this.initializeSocket(socket);
     }
@@ -17,7 +18,7 @@ export class Room {
      * 
      * @param socket the socket
      */
-    public addClient(socket: Socket) {
+    public addClient(socket: Client) {
         this.initializeSocket(socket);
     }
 
@@ -28,26 +29,24 @@ export class Room {
         return this.token;
     }
 
-    private initializeSocket(socket: Socket) {
-        this.clients.push(socket);
-        socket.on(this.DATA_CHANNEL, this.onDataChannelMessage);
+    private initializeSocket(client: Client) {
+        client.setRoom(this);
+        this.clients.push(client);
     }
 
-    private onDataChannelMessage(client: Socket, message: string) {
-        this.broadcast(client, message);
-    }
+    
 
-    public removeClient(client: Socket) {
+    public removeClient(client: Client) {
         if (this.clients.includes(client)) {
-            client.off(this.DATA_CHANNEL, this.onDataChannelMessage);   // remove the listener
             this.clients.splice(this.clients.indexOf(client), 1);
+            client.setRoom(undefined);
         }
     }
 
-    private broadcast(source: Socket, message: string) {
+    public broadcast(source: Client, message: string) {
         this.clients.forEach(( client ) => {
             if (client != source) { // do not send back to author.
-                client.emit(this.DATA_CHANNEL, message);
+                client.getSocket().emit(Main.DATA_CHANNEL, message);
             }
         })
     }

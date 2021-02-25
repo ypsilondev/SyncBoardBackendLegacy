@@ -1,50 +1,52 @@
 import { Server, Socket } from "socket.io";
+import { Client } from "./client";
 import { Room } from "./room";
 
 export class Main {
     
     readonly PORT = 5000;
     readonly COMMAND_CHANNEL = "cmd";
+    public static readonly DATA_CHANNEL = "sync";
 
     private server: Server;
-    private clients: Socket[] = [];
+    private clients: Client[] = [];
     private rooms: Room[] = [];
 
     constructor() {
         this.server = new Server(this.PORT);
 
-        this.server.on("connection", (client) => {
-            console.log(`Client connected [id=${client.id}, ip=${client.handshake.address}]`)
+        this.server.on("connection", (socket) => {
+            console.log(`Client connected [id=${socket.id}, ip=${socket.handshake.address}]`)
+            const client = new Client(socket);
             this.clients.push(client);
 
-            client.on(this.COMMAND_CHANNEL, ( msg: string ) => {
+            socket.on(this.COMMAND_CHANNEL, ( msg: string ) => {
                 const request: {action: string, payload: any|undefined} = JSON.parse(msg);
 
                 switch (request.action) {
                     case "join": {
                         const room = this.getRoom(request.payload as string);
                         if (room == undefined) {
-                            const data = JSON.stringify({'error': 'token invalid'});
-                            client.emit(this.COMMAND_CHANNEL, data);
+                            socket.emit(this.COMMAND_CHANNEL, {error: 'token invalid', success: false});
                         } else {
+                            this.removeClientFromRooms(client);
                             room.addClient(client);
-                            const data = JSON.stringify({'success': 'joined room'});
-                            client.emit(this.COMMAND_CHANNEL, data);
+                            socket.emit(this.COMMAND_CHANNEL, {success: true});
                         }
                         break;
                     }
                     case "create": {
-                        const token = this.createRoom(client);
-                        const data = JSON.stringify({token: token});
-                        client.emit(this.COMMAND_CHANNEL, data);
+                        const room = this.createRoom(client);
+                        this.rooms.push(room);
+                        socket.emit(this.COMMAND_CHANNEL, {token: room.getToken()});
                     }
                 }
             })
 
             // Disconnect event to remove the client
-            client.on("disconnect", () => {
-                this.removeClient(client);
-                console.log(`Client disconnected [id=${client.id}]`)
+            socket.on("disconnect", () => {
+                this.removeClient(socket);
+                console.log(`Client disconnected [id=${socket.id}]`)
             });
         });
     }
@@ -61,21 +63,25 @@ export class Main {
         return channel;
     }
 
-    removeClient(client: Socket) {
-        this.clients.splice(this.clients.indexOf(client), 1);
+    removeClientFromRooms(client: Client) {
         this.rooms.forEach(( room ) => {
             room.removeClient(client);
         })
     }
 
-    createRoom(client: Socket): Room {
+    removeClient(client: Client) {
+        this.clients.splice(this.clients.indexOf(client), 1);
+        this.removeClientFromRooms(client);
+    }
+
+    createRoom(client: Client): Room {
         return new Room(client);
     }
 
-    broadcast(channel: string, message: string, blacklist: Socket) {
+    broadcast(channel: string, message: string, blacklist: Client) {
         this.clients.forEach( ( client ) => {
             if (client != blacklist) {
-                client.emit(channel, message);
+                client.getSocket().emit(channel, message);
             }
         })
     }
