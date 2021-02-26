@@ -4,7 +4,9 @@
   "description": "",
   "main": "./dist/main.js",
   "scripts": {
-    "start": "tsc && node ./dist/main.js"
+    "clean": "rm -rf ./dist/* ",
+    "build": "tsc ",
+    "start": "node ./dist/main.js"
   },
   "repository": {
     "type": "git",
