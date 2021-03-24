@@ -50,6 +50,7 @@ export class Client {
     }
 
     private onDataChannelMessage(message: string) {
+        console.log(message);
         if (this.room != undefined) {
             this.room.broadcast(this, message);
         }
