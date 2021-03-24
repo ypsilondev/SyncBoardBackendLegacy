@@ -16,7 +16,9 @@ export class Client {
         this.socket.on(Main.DATA_CHANNEL, ( message ) => {
             this.onDataChannelMessage(message);
         });
-        this.socket.on(Main.SYNCRONIZE_CHANNEL, this.onInitialSync);
+        this.socket.on(Main.SYNCRONIZE_CHANNEL, ( message ) => {
+            this.onInitialSync(message);
+        });
     }
 
     public setRoom(room: Room|undefined) {
