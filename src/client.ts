@@ -31,12 +31,8 @@ export class Client {
         }
     }
 
-    public emit(room: string, message: string) {
+    public emit(room: string, message: any) {
         this.socket.emit(room, message);
-    }
-
-    public initializeBroadcast() {
-        this.socket.emit(Main.COMMAND_CHANNEL, {action: "sendBoard"});
     }
 
     public getSocket() : Socket {
@@ -52,9 +48,8 @@ export class Client {
     }
 
     private onDataChannelMessage(message: string) {
-        console.log(Client.count++);
         if (this.room != undefined) {
-            this.room.broadcast(this, message);
+            this.room.broadcast(this, message, Main.DATA_CHANNEL);
         }
     }
 

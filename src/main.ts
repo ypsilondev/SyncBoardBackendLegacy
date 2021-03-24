@@ -4,7 +4,8 @@ import { Room } from "./room";
 
 export class Main {
     
-    readonly PORT = 5000;
+    private static readonly PORT = 5000;
+    
     public static readonly COMMAND_CHANNEL = "cmd";
     public static readonly DATA_CHANNEL = "sync";
     public static readonly SYNCRONIZE_CHANNEL = "init-sync";
@@ -14,19 +15,20 @@ export class Main {
     private rooms: Room[] = [];
 
     constructor() {
-        this.server = new Server(this.PORT);
+        this.server = new Server(Main.PORT);
 
         this.server.on("connection", (socket) => {
             console.log(`Client connected [id=${socket.id}, ip=${socket.handshake.address}]`)
             const client = new Client(socket);
             this.clients.push(client);
 
-            socket.on(Main.COMMAND_CHANNEL, ( msg: string ) => {
-                const request: {action: string, payload: any|undefined} = JSON.parse(msg);
+            socket.on(Main.COMMAND_CHANNEL, ( message: string ) => {
+                const request: {action: string, payload: any|undefined} = JSON.parse(message);
 
                 switch (request.action) {
                     case "join": {
                         const room = this.getRoom(request.payload as string);
+
                         if (room == undefined) {
                             socket.emit(Main.COMMAND_CHANNEL, {error: 'token invalid', success: false});
                         } else {
@@ -34,13 +36,12 @@ export class Main {
                             room.addClient(client);
                             socket.emit(Main.COMMAND_CHANNEL, {success: true});
                         }
-                        break;
-                    }
+                    } break;
                     case "create": {
                         const room = this.createRoom(client);
                         this.rooms.push(room);
                         socket.emit(Main.COMMAND_CHANNEL, {token: room.getToken()});
-                    }
+                    } break;
                 }
             })
 
