@@ -27,7 +27,9 @@ export class Client {
     }
 
     public initializeBroadcast() {
-        this.socket.on(Main.SYNCRONIZE_CHANNEL, this.onInitSync);
+        this.socket.on(Main.SYNCRONIZE_CHANNEL, ( message ) => {
+            this.room?.syncronizeClients(message);
+        });
         this.socket.emit(Main.COMMAND_CHANNEL, {action: "sendBoard"});
     }
 
@@ -37,11 +39,6 @@ export class Client {
 
     public getRoom() : Room|undefined {
         return this.room;
-    }
-
-    private onInitSync(message: string) {
-        this.room?.syncronizeClients(message);
-        this.socket.off(Main.SYNCRONIZE_CHANNEL, this.onInitSync);
     }
 
     private onDataChannelMessage(message: string) {
