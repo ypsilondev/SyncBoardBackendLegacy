@@ -9,14 +9,19 @@ export class Client {
 
     constructor(socket: Socket) {
         this.socket = socket;
+        this.initSocket();
+    }
+
+    private initSocket() {
+        this.socket.on(Main.DATA_CHANNEL, ( message ) => {
+            this.onDataChannelMessage(message);
+        });
+        this.socket.on(Main.SYNCRONIZE_CHANNEL, this.onInitialSync);
     }
 
     public setRoom(room: Room|undefined) {
         if (room != undefined) {
             this.room = room;
-            this.socket.on(Main.DATA_CHANNEL, ( message ) => {
-                this.onDataChannelMessage(message);
-            });
         } else {
             this.room = undefined;
         }
@@ -27,9 +32,6 @@ export class Client {
     }
 
     public initializeBroadcast() {
-        this.socket.on(Main.SYNCRONIZE_CHANNEL, ( message ) => {
-            this.room?.syncronizeClients(message);
-        });
         this.socket.emit(Main.COMMAND_CHANNEL, {action: "sendBoard"});
     }
 
@@ -39,6 +41,10 @@ export class Client {
 
     public getRoom() : Room|undefined {
         return this.room;
+    }
+
+    private onInitialSync(message: string) {
+        this.room?.syncronizeClients(message);
     }
 
     private onDataChannelMessage(message: string) {
