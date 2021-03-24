@@ -98,7 +98,7 @@ export class Room {
      * @param message the message to broadcast
      * @param channel the channel to send the message to
      */
-    public broadcast(source: Client, message: string, channel: string) {
+    public broadcast(source: Client, message: any, channel: string) {
         this.clients.forEach(( client ) => {
             if (client != source) { // do not send back to author.
                 client.getSocket().emit(channel, message);
