@@ -4,19 +4,17 @@ import { Room } from "./room";
 
 export class Client {
 
-    private readonly client: Socket;
+    private readonly socket: Socket;
     private room: Room|undefined;
-    private self: Client;
 
-    constructor(client: Socket) {
-        this.client = client;
-        this.self = this;
+    constructor(socket: Socket) {
+        this.socket = socket;
     }
 
     public setRoom(room: Room|undefined) {
         if (room != undefined) {
             this.room = room;
-            this.client.on(Main.DATA_CHANNEL, ( message ) => {
+            this.socket.on(Main.DATA_CHANNEL, ( message ) => {
                 this.onDataChannelMessage(message);
             });
         } else {
@@ -24,12 +22,26 @@ export class Client {
         }
     }
 
+    public emit(room: string, message: string) {
+        this.socket.emit(room, message);
+    }
+
+    public initializeBroadcast() {
+        this.socket.on(Main.SYNCRONIZE_CHANNEL, this.onInitSync);
+        this.socket.emit(Main.COMMAND_CHANNEL, {action: "sendBoard"});
+    }
+
     public getSocket() : Socket {
-        return this.client;
+        return this.socket;
     }
 
     public getRoom() : Room|undefined {
         return this.room;
+    }
+
+    private onInitSync(message: string) {
+        this.room?.syncronizeClients(message);
+        this.socket.off(Main.SYNCRONIZE_CHANNEL, this.onInitSync);
     }
 
     private onDataChannelMessage(message: string) {

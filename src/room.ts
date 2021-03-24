@@ -1,4 +1,3 @@
-import { Socket } from "socket.io";
 import { Client } from "./client";
 import { Main } from "./main";
 import { Utility } from "./util";
@@ -8,6 +7,10 @@ export class Room {
     private readonly token: string;
     private clients: Client[] = [];
 
+    // Syncronization
+    private syncInProgress = false;
+    private syncingClients: Client[] = [];
+
     constructor(socket: Client) { 
         this.token = Utility.getRandomString(4);
         this.initializeSocket(socket);
@@ -16,10 +19,11 @@ export class Room {
     /**
      * Add a new client to the socket.
      * 
-     * @param socket the socket
+     * @param client the socket
      */
-    public addClient(socket: Client) {
-        this.initializeSocket(socket);
+    public addClient(client: Client) {
+        this.initializeSocket(client);
+        this.initializeBroadcast(client);
     }
 
     /**
@@ -34,7 +38,24 @@ export class Room {
         this.clients.push(client);
     }
 
+    private initializeBroadcast(destination: Client) {
+        this.syncingClients.push(destination);
+        if (!this.syncInProgress) {
+            this.syncInProgress = true;
+            this.clients[0].initializeBroadcast();
+        }
+    }
     
+    public syncronizeClients(data: string) {
+        // send message to the sync waiting clients
+        this.clients.forEach(( client ) => {
+            client.emit(Main.DATA_CHANNEL, data);
+        })
+
+        // reset the sync variables
+        this.syncInProgress = false;
+        this.clients = [];
+    }
 
     public removeClient(client: Client) {
         if (this.clients.includes(client)) {

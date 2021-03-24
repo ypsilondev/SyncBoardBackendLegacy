@@ -5,8 +5,9 @@ import { Room } from "./room";
 export class Main {
     
     readonly PORT = 5000;
-    readonly COMMAND_CHANNEL = "cmd";
+    public static readonly COMMAND_CHANNEL = "cmd";
     public static readonly DATA_CHANNEL = "sync";
+    public static readonly SYNCRONIZE_CHANNEL = "init-sync";
 
     private server: Server;
     private clients: Client[] = [];
@@ -20,25 +21,25 @@ export class Main {
             const client = new Client(socket);
             this.clients.push(client);
 
-            socket.on(this.COMMAND_CHANNEL, ( msg: string ) => {
+            socket.on(Main.COMMAND_CHANNEL, ( msg: string ) => {
                 const request: {action: string, payload: any|undefined} = JSON.parse(msg);
 
                 switch (request.action) {
                     case "join": {
                         const room = this.getRoom(request.payload as string);
                         if (room == undefined) {
-                            socket.emit(this.COMMAND_CHANNEL, {error: 'token invalid', success: false});
+                            socket.emit(Main.COMMAND_CHANNEL, {error: 'token invalid', success: false});
                         } else {
                             this.removeClientFromRooms(client);
                             room.addClient(client);
-                            socket.emit(this.COMMAND_CHANNEL, {success: true});
+                            socket.emit(Main.COMMAND_CHANNEL, {success: true});
                         }
                         break;
                     }
                     case "create": {
                         const room = this.createRoom(client);
                         this.rooms.push(room);
-                        socket.emit(this.COMMAND_CHANNEL, {token: room.getToken()});
+                        socket.emit(Main.COMMAND_CHANNEL, {token: room.getToken()});
                     }
                 }
             })
