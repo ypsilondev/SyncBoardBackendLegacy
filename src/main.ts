@@ -5,10 +5,13 @@ import { Room } from "./room";
 export class Main {
     
     private static readonly PORT = 5000;
-    
+
     public static readonly COMMAND_CHANNEL = "cmd";
     public static readonly DATA_CHANNEL = "sync";
     public static readonly SYNCRONIZE_CHANNEL = "init-sync";
+    public static readonly ERASE_CHANNEL = "erase";
+
+    public static readonly BROADCAST_CHANNELS = [Main.DATA_CHANNEL, Main.ERASE_CHANNEL];
 
     private server: Server;
     private clients: Client[] = [];

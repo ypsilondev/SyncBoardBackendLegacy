@@ -4,8 +4,6 @@ import { Room } from "./room";
 
 export class Client {
 
-    private static count = 0;
-
     private readonly socket: Socket;
     private room: Room|undefined;
 
@@ -15,9 +13,12 @@ export class Client {
     }
 
     private initSocket() {
-        this.socket.on(Main.DATA_CHANNEL, ( message ) => {
-            this.onDataChannelMessage(message);
+        Main.BROADCAST_CHANNELS.forEach(channel => {
+            this.socket.on(channel, ( message ) => {
+                this.onBroadcastChannelMessage(channel, message);
+            });
         });
+
         this.socket.on(Main.SYNCRONIZE_CHANNEL, ( message ) => {
             this.onInitialSync(message);
         });
@@ -47,9 +48,9 @@ export class Client {
         this.room?.syncronizeClients(message);
     }
 
-    private onDataChannelMessage(message: string) {
+    private onBroadcastChannelMessage(channel: string, message: string) {
         if (this.room != undefined) {
-            this.room.broadcast(this, message, Main.DATA_CHANNEL);
+            this.room.broadcast(this, message, channel);
         }
     }
 
