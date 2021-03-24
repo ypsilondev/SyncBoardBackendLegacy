@@ -4,6 +4,8 @@ import { Room } from "./room";
 
 export class Client {
 
+    private static count = 0;
+
     private readonly socket: Socket;
     private room: Room|undefined;
 
@@ -50,7 +52,7 @@ export class Client {
     }
 
     private onDataChannelMessage(message: string) {
-        console.log(message);
+        console.log(Client.count++);
         if (this.room != undefined) {
             this.room.broadcast(this, message);
         }
