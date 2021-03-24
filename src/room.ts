@@ -4,8 +4,8 @@ import { Utility } from "./util";
 
 export class Room {
 
-    private static readonly JOIN_MESSAGE = "joined";
-    private static readonly LEAVE_MESSAGE = "left";
+    private static readonly JOIN_MESSAGE = {action: "joined"};
+    private static readonly LEAVE_MESSAGE = {action: "left"};
 
     private readonly token: string;
     private clients: Client[] = [];
