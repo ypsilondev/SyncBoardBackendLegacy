@@ -1,6 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { Client } from "./client";
 import { Room } from "./room";
+import { Request } from "./structs/requests.struct";
 
 export class Main {
     
@@ -21,39 +22,49 @@ export class Main {
         this.server = new Server(Main.PORT);
 
         this.server.on("connection", (socket) => {
-            console.log(`Client connected [id=${socket.id}, ip=${socket.handshake.address}]`)
+            console.log(`Client connected [id=${socket.id}, ip=${socket.handshake.address}]`);
             const client = new Client(socket);
             this.clients.push(client);
 
             socket.on(Main.COMMAND_CHANNEL, ( message: string ) => {
-                const request: {action: string, payload: any|undefined} = JSON.parse(message);
+                const request: Request = JSON.parse(message);
 
                 switch (request.action) {
                     case "join": {
-                        const room = this.getRoom(request.payload as string);
-
-                        if (room == undefined) {
-                            socket.emit(Main.COMMAND_CHANNEL, {error: 'token invalid', success: false});
-                        } else {
-                            this.removeClientFromRooms(client);
-                            room.addClient(client);
-                            socket.emit(Main.COMMAND_CHANNEL, {success: true});
-                        }
-                    } break;
+                        this.handleJoin(request, client);
+                        break;
+                    }
                     case "create": {
-                        const room = this.createRoom(client);
-                        this.rooms.push(room);
-                        socket.emit(Main.COMMAND_CHANNEL, {token: room.getToken()});
-                    } break;
+                        this.handleCreate(request, client);
+                        break;
+                    }
                 }
             })
 
             // Disconnect event to remove the client
             socket.on("disconnect", () => {
                 this.removeClient(socket);
-                console.log(`Client disconnected [id=${socket.id}]`)
+                console.log(`Client disconnected [id=${socket.id}]`);
             });
         });
+    }
+
+    private handleCreate(request: Request, client: Client) {
+        const room = this.createRoom(client);
+        this.rooms.push(room);
+        client.emit(Main.COMMAND_CHANNEL, {token: room.getToken()});
+    }
+
+    private handleJoin(request: Request, client: Client) {
+        const room = this.getRoom(request.payload as string);
+
+        if (room == undefined) {
+            client.emit(Main.COMMAND_CHANNEL, {error: 'token invalid', success: false});
+        } else {
+            this.removeClientFromRooms(client);
+            room.addClient(client);
+            client.emit(Main.COMMAND_CHANNEL, {success: true});
+        }
     }
 
     getRoom(token: string) : Room|undefined {
